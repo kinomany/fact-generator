@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Генератор случайных фактов</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #0f172a, #1e293b);
+            color: #e2e8f0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 760px;
+            background: rgba(15, 23, 42, 0.92);
+            border: 1px solid rgba(148, 163, 184, 0.15);
+            border-radius: 24px;
+            padding: 36px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+            text-align: center;
+        }
+
+        h1 {
+            margin-top: 0;
+            margin-bottom: 12px;
+            font-size: 34px;
+        }
+
+        .subtitle {
+            margin-bottom: 28px;
+            color: #94a3b8;
+            font-size: 18px;
+        }
+
+        .counter {
+            display: inline-block;
+            margin-bottom: 24px;
+            padding: 10px 16px;
+            background: rgba(59, 130, 246, 0.12);
+            border: 1px solid rgba(59, 130, 246, 0.25);
+            border-radius: 999px;
+            font-size: 15px;
+            color: #bfdbfe;
+        }
+
+        
+        .fact-box {
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            border: 1px solid rgba(148, 163, 184, 0.18);
+            border-radius: 18px;
+            padding: 28px;
+            margin-bottom: 24px;
+            min-height: 140px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #fact-text {
+            font-size: 24px;
+            line-height: 1.6;
+            margin: 0;
+            color: #f8fafc;
+        }
+
+        .buttons {
+            display: flex;
+            justify-content: center;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            border: none;
+            border-radius: 12px;
+            padding: 14px 22px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.15s ease, opacity 0.15s ease, box-shadow 0.2s ease;
+        }
+
+        button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            opacity: 0.96;
+        }
+
+        .primary-btn {
+            background: #3b82f6;
+            color: white;
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.35);
+        }
+
+        .secondary-btn {
+            background: #22c55e;
+            color: white;
+            box-shadow: 0 8px 20px rgba(34, 197, 94, 0.3);
+        }
+
+        .message {
+            margin-top: 18px;
+            min-height: 24px;
+            color: #93c5fd;
+            font-size: 15px;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 24px;
+            }
+
+            h1 {
+                font-size: 28px;
+            }
+
+            #fact-text {
+                font-size: 20px;
+            }
+
+            button {
+                width: 100%;
+            }
+
+            .buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Генератор случайных фактов</h1>
+        <p class="subtitle">Нажимай кнопку и получай новый факт без перезагрузки страницы</p>
+
+        <div class="counter">
+            Просмотрено фактов: <span id="views-count">{{ views }}</span>
+        </div>
+
+        <div class="fact-box">
+            <p id="fact-text">{{ fact }}</p>
+        </div>
+
+        <div class="buttons">
+            <button class="primary-btn" onclick="loadFact()">Ещё факт</button>
+            <button class="secondary-btn" onclick="copyFact()">Скопировать факт</button>
+        </div>
+
+        <div class="message" id="message"></div>
+    </div>
+
+    <script>
+    let isLoading = false;
+
+    async function loadFact() {
+        if (isLoading) return;
+
+        isLoading = true;
+
+        const message = document.getElementById("message");
+        const button = document.querySelector(".primary-btn");
+
+        button.disabled = true;
+        button.textContent = "Загрузка...";
+        message.textContent = "Загружаю новый факт...";
+
+        try {
+            const response = await fetch("/api/fact");
+            const data = await response.json();
+
+            document.getElementById("fact-text").textContent = data.fact;
+            document.getElementById("views-count").textContent = data.views;
+            message.textContent = "Новый факт загружен.";
+        } catch (error) {
+            message.textContent = "Ошибка при загрузке факта.";
+        } finally {
+            isLoading = false;
+            button.disabled = false;
+            button.textContent = "Ещё факт";
+        }
+    }
+
+    async function copyFact() {
+        const factText = document.getElementById("fact-text").textContent;
+        const message = document.getElementById("message");
+
+        try {
+            await navigator.clipboard.writeText(factText);
+            message.textContent = "Факт скопирован в буфер обмена.";
+        } catch (error) {
+            message.textContent = "Не удалось скопировать факт.";
+        }
+    }
+    </script>
+</body>
+</html>
